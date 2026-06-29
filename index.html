@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mario Kart — Запрошення для Каті</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap');
+
+    :root {
+      --red:    #e8234a;
+      --yellow: #ffd93d;
+      --blue:   #4361ee;
+      --green:  #06d6a0;
+      --dark:   #1a1a2e;
+      --card:   #ffffff;
+      --radius: 24px;
+      --shadow: 0 4px 24px rgba(0,0,0,.12);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: var(--dark);
+      min-height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    /* ── CONFETTI ── */
+    .confetti-wrap {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+    }
+    .dot {
+      position: absolute;
+      width: 10px; height: 10px;
+      border-radius: 2px;
+      opacity: .7;
+      animation: fall linear infinite;
+    }
+    @keyframes fall {
+      0%   { transform: translateY(-20px) rotate(0deg); opacity: .8; }
+      100% { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+    }
+
+    /* ── BENTO GRID ── */
+    .bento {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      max-width: 520px;
+      width: 100%;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .card-full  { grid-column: 1 / -1; }
+    .card-left  { grid-column: 1; }
+    .card-right { grid-column: 2; }
+
+    /* hero */
+    .card-hero {
+      background: linear-gradient(135deg, var(--red) 0%, #ff6b35 100%);
+      color: #fff;
+      align-items: center;
+      text-align: center;
+      padding: 36px 24px;
+    }
+    .kart-emoji { font-size: clamp(52px, 14vw, 80px); line-height: 1; }
+    .hero-title {
+      font-size: clamp(20px, 5.5vw, 30px);
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      text-shadow: 0 2px 8px rgba(0,0,0,.25);
+    }
+    .hero-sub {
+      font-size: clamp(13px, 3.5vw, 15px);
+      opacity: .9;
+      font-weight: 700;
+    }
+
+    /* info cards */
+    .card-yellow { background: var(--yellow); }
+    .card-blue   { background: var(--blue); color: #fff; }
+    .card-green  { background: var(--green); }
+
+    .card-label {
+      font-size: 11px; font-weight: 800;
+      text-transform: uppercase; letter-spacing: 1.2px; opacity: .65;
+    }
+    .card-value { font-size: clamp(17px, 4.5vw, 22px); font-weight: 900; }
+    .card-icon  { font-size: 32px; }
+
+    /* action card */
+    .card-action {
+      background: #f8f8ff;
+      align-items: center;
+      text-align: center;
+      gap: 14px;
+    }
+    .action-q {
+      font-size: clamp(15px, 4vw, 18px);
+      font-weight: 800;
+      color: var(--dark);
+    }
+    .btn-row { display: flex; gap: 12px; width: 100%; }
+    .btn {
+      flex: 1; padding: 14px 0; border: none; border-radius: 16px;
+      font-family: 'Nunito', sans-serif;
+      font-size: clamp(15px, 4vw, 18px); font-weight: 900;
+      cursor: pointer; transition: transform .12s, box-shadow .12s; outline: none;
+    }
+    .btn:active { transform: scale(.95); }
+    .btn-yes { background: var(--green); color: var(--dark); box-shadow: 0 4px 0 #04a07a; }
+    .btn-yes:hover { transform: translateY(-2px); box-shadow: 0 6px 0 #04a07a; }
+    .btn-no  { background: #ffe4e4; color: var(--red); box-shadow: 0 4px 0 #f9c0c0; }
+    .btn-no:hover  { transform: translateY(-2px); box-shadow: 0 6px 0 #f9c0c0; }
+
+    /* track list */
+    .track-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+    .track-list li {
+      font-size: 13px; font-weight: 700; color: var(--dark);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .track-list li::before { content: '🏁'; font-size: 14px; }
+
+    /* ── MODAL ── */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(26,26,46,.78);
+      backdrop-filter: blur(6px);
+      display: none; align-items: center; justify-content: center;
+      z-index: 100; padding: 20px;
+    }
+    .overlay.active { display: flex; }
+
+    .modal {
+      background: #fff; border-radius: 28px;
+      padding: 36px 28px 28px; max-width: 390px; width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+      animation: popIn .25s cubic-bezier(.34,1.56,.64,1) both;
+      max-height: 90dvh; overflow-y: auto;
+    }
+    @keyframes popIn {
+      from { transform: scale(.7); opacity: 0; }
+      to   { transform: scale(1);  opacity: 1; }
+    }
+
+    .modal-emoji  { font-size: 52px; margin-bottom: 10px; }
+    .modal-title  { font-size: clamp(17px, 5vw, 21px); font-weight: 900; color: var(--dark); margin-bottom: 8px; }
+    .modal-sub    { font-size: 14px; color: #666; font-weight: 700; margin-bottom: 24px; }
+
+    /* ── CALENDAR ── */
+    .cal-wrap { width: 100%; }
+    .cal-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .cal-month { font-size: 17px; font-weight: 900; color: var(--dark); }
+    .cal-nav {
+      background: var(--yellow); border: none; border-radius: 10px;
+      width: 34px; height: 34px; font-size: 16px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: transform .1s;
+    }
+    .cal-nav:active { transform: scale(.9); }
+
+    .cal-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 3px; text-align: center;
+    }
+    .cal-day-name {
+      font-size: 10px; font-weight: 800; color: #aaa; padding: 4px 0;
+    }
+    .cal-day {
+      aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; border-radius: 9px;
+      cursor: default; color: #ccc;
+    }
+    .cal-day.past { color: #ddd; background: #fafafa; }
+    .cal-day.available {
+      background: #e8f5f0; color: var(--dark);
+      cursor: pointer; transition: background .15s, transform .1s;
+    }
+    .cal-day.available:hover { background: var(--green); transform: scale(1.1); }
+    .cal-day.selected { background: var(--red) !important; color: #fff !important; transform: scale(1.1); }
+
+    /* time picker */
+    .time-wrap { margin-top: 18px; text-align: left; }
+    .time-label {
+      font-size: 12px; font-weight: 800; color: #888;
+      margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1px;
+    }
+    .time-note {
+      font-size: 12px; color: #aaa; font-weight: 700; margin-bottom: 8px;
+    }
+    .time-slots { display: flex; flex-wrap: wrap; gap: 7px; }
+    .time-slot {
+      padding: 8px 13px; border-radius: 12px; background: #f0f0ff;
+      font-size: 14px; font-weight: 800; color: var(--dark);
+      cursor: pointer; border: 2px solid transparent; transition: all .15s;
+    }
+    .time-slot:hover  { border-color: var(--blue); background: #e0e5ff; }
+    .time-slot.chosen { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+    .btn-confirm {
+      width: 100%; margin-top: 18px; padding: 15px;
+      background: linear-gradient(135deg, var(--red), #ff6b35);
+      color: #fff; border: none; border-radius: 16px;
+      font-family: 'Nunito', sans-serif; font-size: 17px; font-weight: 900;
+      cursor: pointer; box-shadow: 0 4px 0 #b01a35;
+      transition: transform .12s, box-shadow .12s;
+    }
+    .btn-confirm:hover    { transform: translateY(-2px); box-shadow: 0 6px 0 #b01a35; }
+    .btn-confirm:active   { transform: scale(.97); }
+    .btn-confirm:disabled { opacity: .4; cursor: default; transform: none; box-shadow: none; }
+
+    .btn-single {
+      width: 100%; padding: 14px; background: var(--dark); color: #fff;
+      border: none; border-radius: 16px;
+      font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 900;
+      cursor: pointer; margin-top: 8px; transition: opacity .15s;
+    }
+    .btn-single:hover { opacity: .85; }
+
+    /* success screen */
+    .success-screen { display: none; text-align: center; padding: 8px 0; }
+    .success-screen.show { display: block; }
+    .success-emoji { font-size: 60px; }
+    .success-title { font-size: 21px; font-weight: 900; color: var(--dark); margin: 12px 0 6px; }
+    .success-info  { font-size: 16px; color: #333; font-weight: 800; margin-bottom: 4px; }
+    .success-badge {
+      display: inline-block; margin-top: 14px;
+      background: var(--yellow); color: var(--dark);
+      padding: 10px 20px; border-radius: 14px; font-weight: 900; font-size: 15px;
+    }
+    .success-screenshot {
+      margin-top: 14px; padding: 14px 16px;
+      background: #fff0f5; border-radius: 16px;
+      border: 2px dashed var(--red);
+      font-size: 14px; font-weight: 800; color: var(--red);
+      line-height: 1.5;
+    }
+
+    @media (max-width: 400px) {
+      .bento { gap: 12px; }
+      .card  { padding: 20px 16px; }
+      .modal { padding: 26px 18px 22px; }
+      .time-slot { padding: 7px 10px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="confetti-wrap" id="confettiWrap"></div>
+
+<!-- ── BENTO ── -->
+<div class="bento">
+
+  <div class="card card-full card-hero">
+    <div class="kart-emoji">🏎️</div>
+    <div class="hero-title">Катю, запрошуємо на Mario Kart!</div>
+    <div class="hero-sub">Збираємось гнати трасами разом 🍄🌟 Готова до перегонів?</div>
+  </div>
+
+  <div class="card card-left card-yellow">
+    <div class="card-icon">📅</div>
+    <div class="card-label">Коли</div>
+    <div class="card-value" id="dateCard">Найближчі вихідні</div>
+  </div>
+
+  <div class="card card-right card-blue">
+    <div class="card-icon">🎮</div>
+    <div class="card-label">Платформа</div>
+    <div class="card-value">Nintendo Switch</div>
+  </div>
+
+  <div class="card card-left" style="background:#fff0f3;">
+    <div class="card-label" style="opacity:.5;">Траси</div>
+    <ul class="track-list">
+      <li>Rainbow Road</li>
+      <li>Mushroom Cup</li>
+      <li>Star Cup</li>
+      <li>Special Cup</li>
+    </ul>
+  </div>
+
+  <div class="card card-right card-green">
+    <div class="card-icon">🏆</div>
+    <div class="card-label">Приз</div>
+    <div class="card-value" style="font-size:16px;">Слава та честь переможниці!</div>
+  </div>
+
+  <div class="card card-full card-action">
+    <div class="action-q">💖 Катю, ти з нами? 🏎️</div>
+    <div class="btn-row">
+      <button class="btn btn-yes" onclick="onYes()">✅ Так, їду!</button>
+      <button class="btn btn-no"  onclick="onNo()">❌ Ні</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── OVERLAY: "Sure?" ── -->
+<div class="overlay" id="modalSure">
+  <div class="modal">
+    <div class="modal-emoji">😱</div>
+    <div class="modal-title">Катю, точно впевнена?</div>
+    <div class="modal-sub">Без тебе Rainbow Road буде сумним… 🥺</div>
+    <div class="btn-row">
+      <button class="btn btn-yes" onclick="onSureYes()">😬 Так, не можу</button>
+      <button class="btn btn-no"  onclick="onSureNo()">🙌 Ні, їду!</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── OVERLAY: "Cannot refuse" ── -->
+<div class="overlay" id="modalRefuse">
+  <div class="modal">
+    <div class="modal-emoji">🍄</div>
+    <div class="modal-title">Ти не можеш відмовити!</div>
+    <div class="modal-sub">Маріо особисто надіслав запрошення для тебе. Це честь! 👑</div>
+    <button class="btn-single" onclick="openCalendar()">Окей, обираю дату 🗓️</button>
+  </div>
+</div>
+
+<!-- ── OVERLAY: CALENDAR ── -->
+<div class="overlay" id="modalCal">
+  <div class="modal">
+
+    <div id="calendarContent">
+      <div class="modal-emoji">🗓️</div>
+      <div class="modal-title">Обери зручну дату і час</div>
+      <div class="modal-sub">Доступні дати підсвічені зеленим 🟢</div>
+
+      <div class="cal-wrap">
+        <div class="cal-header">
+          <button class="cal-nav" onclick="prevMonth()">◀</button>
+          <div class="cal-month" id="calMonthLabel"></div>
+          <button class="cal-nav" onclick="nextMonth()">▶</button>
+        </div>
+        <div class="cal-grid" id="calGrid">
+          <div class="cal-day-name">Пн</div>
+          <div class="cal-day-name">Вт</div>
+          <div class="cal-day-name">Ср</div>
+          <div class="cal-day-name">Чт</div>
+          <div class="cal-day-name">Пт</div>
+          <div class="cal-day-name">Сб</div>
+          <div class="cal-day-name">Нд</div>
+        </div>
+      </div>
+
+      <div class="time-wrap" id="timeWrap" style="display:none;">
+        <div class="time-label">Зручний час</div>
+        <div class="time-note" id="timeNote"></div>
+        <div class="time-slots" id="timeSlots"></div>
+      </div>
+
+      <button class="btn-confirm" id="btnConfirm" disabled onclick="onConfirm()">
+        Підтвердити 🚀
+      </button>
+    </div>
+
+    <!-- success screen -->
+    <div class="success-screen" id="successScreen">
+      <div class="success-emoji">🏆</div>
+      <div class="success-title">Вау, Катю! Чекаємо тебе!</div>
+      <div class="success-info" id="successInfo"></div>
+      <div class="success-badge">🏎️ Газуй, гонщице!</div>
+      <div class="success-screenshot">
+        📸 Зроби скріншот цього екрану<br>і надішли мені — щоб я знав(ла)! 💌
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  /* ── confetti ── */
+  (function () {
+    const colors = ['#e8234a','#ffd93d','#4361ee','#06d6a0','#ff6b35','#fff'];
+    const wrap = document.getElementById('confettiWrap');
+    for (let i = 0; i < 32; i++) {
+      const d = document.createElement('div');
+      d.className = 'dot';
+      d.style.cssText = `
+        left:${Math.random()*100}%;
+        width:${6+Math.random()*8}px; height:${6+Math.random()*8}px;
+        background:${colors[Math.floor(Math.random()*colors.length)]};
+        animation-duration:${4+Math.random()*8}s;
+        animation-delay:${-Math.random()*10}s;
+        border-radius:${Math.random()>.5?'50%':'2px'};
+      `;
+      wrap.appendChild(d);
+    }
+  })();
+
+  /* ── time slots ── */
+  const TIMES_FRIDAY = ['12:00','13:00','14:00','15:00','16:00','17:00'];
+  const TIMES_OTHER  = ['14:00','15:00','16:00','18:00','19:00','20:00'];
+
+  function dateKey(dt) {
+    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  }
+
+  /* Returns time slots for a date key, filtered by current time if today */
+  function availableTimesFor(key) {
+    const dow = new Date(key + 'T00:00:00').getDay();
+    const all = dow === 5 ? TIMES_FRIDAY : TIMES_OTHER;
+
+    const now = new Date();
+    if (key === dateKey(now)) {
+      const nowMin = now.getHours() * 60 + now.getMinutes();
+      return all.filter(t => {
+        const [h, m] = t.split(':').map(Number);
+        return h * 60 + m > nowMin;
+      });
+    }
+    return all;
+  }
+
+  /* All days from today for 120 days that still have time slots */
+  const availableDates = new Set();
+  const _cur = new Date();
+  for (let i = 0; i < 120; i++) {
+    const k = dateKey(_cur);
+    if (availableTimesFor(k).length > 0) availableDates.add(k);
+    _cur.setDate(_cur.getDate() + 1);
+  }
+
+  /* ── state ── */
+  let selectedDate = null;
+  let selectedTime = null;
+  const now0 = new Date();
+  let calYear  = now0.getFullYear();
+  let calMonth = now0.getMonth();     // always open on current month
+
+  /* ── helpers ── */
+  const show = id => document.getElementById(id).classList.add('active');
+  const hide = id => document.getElementById(id).classList.remove('active');
+
+  /* ── RSVP ── */
+  function onYes() { openCalendar(); }
+  function onNo()  { show('modalSure'); }
+  function onSureYes() { hide('modalSure'); show('modalRefuse'); }
+  function onSureNo()  { hide('modalSure'); openCalendar(); }
+
+  function openCalendar() {
+    hide('modalSure'); hide('modalRefuse');
+    document.getElementById('calendarContent').style.display = '';
+    document.getElementById('successScreen').classList.remove('show');
+    selectedDate = null; selectedTime = null;
+
+    // start on current month; if no available dates this month — jump to first month that has one
+    const n = new Date();
+    calYear  = n.getFullYear();
+    calMonth = n.getMonth();
+    const firstAvail = [...availableDates].sort()[0];
+    if (firstAvail) {
+      const [fy, fm] = firstAvail.split('-').map(Number);
+      const curMonthHasAvail = [...availableDates].some(k => {
+        const [y, m] = k.split('-').map(Number);
+        return y === calYear && m - 1 === calMonth;
+      });
+      if (!curMonthHasAvail) {
+        calYear  = fy;
+        calMonth = fm - 1;
+      }
+    }
+
+    updateTimePanel();
+    renderCalendar();
+    show('modalCal');
+  }
+
+  /* ── calendar ── */
+  const MONTH_NAMES = [
+    'Січень','Лютий','Березень','Квітень','Травень','Червень',
+    'Липень','Серпень','Вересень','Жовтень','Листопад','Грудень'
+  ];
+
+  function renderCalendar() {
+    document.getElementById('calMonthLabel').textContent = `${MONTH_NAMES[calMonth]} ${calYear}`;
+    const grid = document.getElementById('calGrid');
+    while (grid.children.length > 7) grid.removeChild(grid.lastChild);
+
+    const startOffset = (new Date(calYear, calMonth, 1).getDay() + 6) % 7;
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+    for (let i = 0; i < startOffset; i++) {
+      const el = document.createElement('div');
+      el.className = 'cal-day';
+      grid.appendChild(el);
+    }
+
+    for (let n = 1; n <= daysInMonth; n++) {
+      const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(n).padStart(2,'0')}`;
+      const isAvail = availableDates.has(key);
+      const el = document.createElement('div');
+      el.className = 'cal-day' + (isAvail ? ' available' : ' past');
+      if (key === selectedDate) el.classList.add('selected');
+      el.textContent = n;
+      if (isAvail) el.addEventListener('click', () => pickDate(key));
+      grid.appendChild(el);
+    }
+  }
+
+  function prevMonth() {
+    calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; }
+    selectedDate = null; selectedTime = null;
+    updateTimePanel(); renderCalendar();
+  }
+  function nextMonth() {
+    calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; }
+    selectedDate = null; selectedTime = null;
+    updateTimePanel(); renderCalendar();
+  }
+
+  function pickDate(key) {
+    selectedDate = key; selectedTime = null;
+    renderCalendar(); updateTimePanel();
+  }
+
+  function updateTimePanel() {
+    const wrap  = document.getElementById('timeWrap');
+    const slots = document.getElementById('timeSlots');
+    const note  = document.getElementById('timeNote');
+    const btn   = document.getElementById('btnConfirm');
+
+    if (!selectedDate) { wrap.style.display = 'none'; btn.disabled = true; return; }
+
+    const times = availableTimesFor(selectedDate);
+    const isFri = new Date(selectedDate + 'T00:00:00').getDay() === 5;
+    note.textContent = isFri ? '⏰ У п\'ятницю — з 12:00 до 17:00' : '';
+
+    wrap.style.display = '';
+    slots.innerHTML = '';
+    times.forEach(t => {
+      const s = document.createElement('div');
+      s.className = 'time-slot' + (t === selectedTime ? ' chosen' : '');
+      s.textContent = t;
+      s.addEventListener('click', () => pickTime(t));
+      slots.appendChild(s);
+    });
+    btn.disabled = !selectedTime;
+  }
+
+  function pickTime(t) {
+    selectedTime = t;
+    document.querySelectorAll('.time-slot').forEach(s =>
+      s.classList.toggle('chosen', s.textContent === t)
+    );
+    document.getElementById('btnConfirm').disabled = false;
+  }
+
+  /* ── confirm ── */
+  const MONTH_GEN = [
+    'січня','лютого','березня','квітня','травня','червня',
+    'липня','серпня','вересня','жовтня','листопада','грудня'
+  ];
+  const DAY_NAMES = ['неділю','понеділок','вівторок','середу','четвер','п\'ятницю','суботу'];
+
+  function onConfirm() {
+    const [y, m, day] = selectedDate.split('-');
+    const dt = new Date(+y, +m-1, +day);
+    const label = `${+day} ${MONTH_GEN[+m-1]} ${y} (${DAY_NAMES[dt.getDay()]}) о ${selectedTime}`;
+    document.getElementById('calendarContent').style.display = 'none';
+    document.getElementById('successScreen').classList.add('show');
+    document.getElementById('successInfo').textContent = `📅 ${label}`;
+  }
+</script>
+</body>
+</html>
